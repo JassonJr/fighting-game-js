@@ -25,6 +25,7 @@ class Sprite {
       }
       this.color = color
       this.isAttacking
+      this.health = 100
     }
 
     draw(){
@@ -132,6 +133,37 @@ function rectangularCollision({
     )
 }
 
+function determineWinner({player, enemy, timerId}) {
+    clearTimeout(timerId)
+    document.querySelector('#displayText').style.display = 'flex'
+
+    if (player.health === enemy.health) {
+        document.querySelector('#displayText').innerHTML = 'Tie'
+    } else if (player.health > enemy.health) {
+        document.querySelector('#displayText').innerHTML = 'Player 1 Wins'
+    } else if (player.health < enemy.health) {
+        document.querySelector('#displayText').innerHTML = 'Player 2 Wins'
+    } 
+}
+
+let timer = 60
+let timerId
+function decreaseTimer() {
+
+    if (timer > 0) {
+        timerId = setTimeout(decreaseTimer, 1000)
+        timer--
+        document.querySelector('#timer').innerHTML = timer
+    }
+
+    if (timer === 0) {
+        
+        determineWinner({player, enemy, timerId})
+    }
+}
+
+decreaseTimer()
+
 function animate() {
     window.requestAnimationFrame(animate)
     c.fillStyle = 'black'
@@ -162,8 +194,9 @@ function animate() {
     }) && 
         player.isAttacking
     ){
-        console.log('hit')
         player.isAttacking = false
+        enemy.health -= 20
+        document.querySelector('#enemyHealth').style.width = enemy.health + '%'
     }
 
     if( rectangularCollision({
@@ -172,10 +205,17 @@ function animate() {
     }) && 
         enemy.isAttacking
     ){
-        console.log('hit')
         enemy.isAttacking = false
+        player.health -= 20
+        document.querySelector('#playerHealth').style.width = player.health + '%'
+    }
+
+    //end the game based on health
+    if (enemy.health <= 0 || player.health <= 0) {
+        determineWinner({player, enemy, timerId})
     }
 }
+
 animate()
 
 window.addEventListener('keydown', (event) => {
@@ -208,7 +248,7 @@ window.addEventListener('keydown', (event) => {
             enemy.velocity.y = -20
             break
         case 'ArrowDown':
-            enemy.isAttacking = true
+            enemy.attack()
             break           
     }
 })
